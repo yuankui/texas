@@ -60,7 +60,7 @@ def judge_cards(cards):
     for is_func in funcions:
         if is_func(cards):
             return is_func.func_name
-    return None
+    return ""
 
 
 def is_royal_flush(cards):
@@ -124,6 +124,19 @@ def group_cards(cards):
     return card_num_map
 
 
+card_score_map = {
+    is_royal_flush.func_name: 11,
+    is_straight_flush.func_name: 10,
+    is_four_of_a_kind.func_name: 9,
+    is_full_house.func_name: 8,
+    is_flush.func_name: 7,
+    is_straight.func_name: 6,
+    is_three_of_a_kind.func_name: 5,
+    is_two_pairs.func_name: 4,
+    is_one_pair.func_name: 3,
+    '': 2
+}
+
 rand = random.Random()
 
 
@@ -137,16 +150,39 @@ def generate_card(card_str_set):
             return card
 
 
+def try_five(cards, current, left):
+    if left + len(current) < 5:
+        return set()
+
+    if len(current) == 5:
+        return set([judge_cards(current)])
+
+    current.append(cards[len(cards) - left])
+    first = try_five(cards, current, left - 1)
+    current.pop()
+    second = try_five(cards, current, left - 1)
+
+    return first.union(second)
+
+
+def get_card_func(cards):
+    funcs = try_five(cards, [], 7)
+    return funcs
+
+
 def try_rand_cards(cards):
     cards = cards[:]
     card_str_set = set(map(str, cards))
 
-    card = generate_card(card_str_set)
-    cards.append(card)
-    card_str_set.add(str(card))
+    for i in range(7 - len(cards)):
+        card = generate_card(card_str_set)
+        cards.append(card)
+        card_str_set.add(str(card))
 
+    funcs = get_card_func(cards)
 
-
+    funcs = sorted(funcs, key=lambda x:card_score_map[x])
+    return funcs[-1]
 
 if __name__ == '__main__':
 
@@ -159,7 +195,9 @@ if __name__ == '__main__':
 
     # 模拟不发剩余牌
     func_num_map = {}
-    for j in range(10000):
+    for j in range(100):
         func = try_rand_cards(cards)
         num = func_num_map.get(func, 0)
         func_num_map[func] = num + 1
+
+    print func_num_map
