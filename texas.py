@@ -200,4 +200,5 @@ if __name__ == '__main__':
         num = func_num_map.get(func, 0)
         func_num_map[func] = num + 1
 
-    print func_num_map
+    for k,v in func_num_map:
+        print k.ljust(20) + ": " + v /100.0
