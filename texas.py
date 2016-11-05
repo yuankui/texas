@@ -48,15 +48,6 @@ class Card(object):
 #     算出一个综合分
 def judge_cards(cards):
     """根据五张牌，判断这是什么样的五张牌，同花顺？葫芦？同花？"""
-    funcions = [is_straight_flush,
-                is_four_of_a_kind,
-                is_full_house,
-                is_flush,
-                is_straight,
-                is_three_of_a_kind,
-                is_two_pairs,
-                is_one_pair,
-                ]
     for is_func in funcions:
         if is_func(cards):
             return is_func.func_name
@@ -137,6 +128,16 @@ card_score_map = {
     '': 2
 }
 
+funcions = [is_straight_flush,
+            is_four_of_a_kind,
+            is_full_house,
+            is_flush,
+            is_straight,
+            is_three_of_a_kind,
+            is_two_pairs,
+            is_one_pair,
+            ]
+
 rand = random.Random()
 
 
@@ -181,24 +182,38 @@ def try_rand_cards(cards):
 
     funcs = get_card_func(cards)
 
-    funcs = sorted(funcs, key=lambda x:card_score_map[x])
+    funcs = sorted(funcs, key=lambda x: card_score_map[x])
     return funcs[-1]
 
-if __name__ == '__main__':
 
-    # 获取已有牌
-    inp = " ".join(sys.argv[1:])
-    cards = Card.create(inp)
-
+def simulate_left_cards(cards, total):
     if len(cards) >= 7:
         raise Exception("card is full")
 
     # 模拟不发剩余牌
     func_num_map = {}
-    for j in range(100):
+
+    for j in range(total):
         func = try_rand_cards(cards)
         num = func_num_map.get(func, 0)
         func_num_map[func] = num + 1
 
-    for k,v in func_num_map:
-        print k.ljust(20) + ": " + v /100.0
+    return func_num_map
+
+
+if __name__ == '__main__':
+    # 获取已有牌
+    inp = " ".join(sys.argv[1:])
+    cards = Card.create(inp)
+
+    total = 1000
+    map1 = simulate_left_cards(cards, total)
+    map2 = simulate_left_cards(cards[2:], total)
+
+    for func in funcions:
+        func = func.func_name
+        print "{}: {:.3f} : {:.3f}".format(
+            func.ljust(20),
+            map1.get(func, 0) / float(total),
+            map2.get(func, 0) / float(total)
+        )
