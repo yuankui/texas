@@ -1,7 +1,7 @@
 # coding=utf-8
+import random
 import re
 import sys
-
 
 #
 # 输入已有的几张牌，然后程序自动随机生成剩余的牌10000+次，算出一个综合得分，以及得出一个继续操作的建议
@@ -11,8 +11,10 @@ import sys
 # 点数：2,3,4,5,6,7,8,9,10,11,12,13,14(A)
 # 花色：A（黑桃）,B（梅花）,C（红桃）,D（方片）
 # 比如红桃8可以用8C表示，梅花A用14B表示
+import card_map
 
-class Card:
+
+class Card(object):
     def __init__(self, num, color):
         self.num = num
         self.color = color
@@ -27,10 +29,10 @@ class Card:
 
         cards = []
         for num, color in matches:
-            if not 2 <= int(num) <= 14:
-                raise Exception("invalid card {}{}".format(num, color))
+            if not (2 <= int(num) <= 14):
+                raise Exception("invalid card {}-{}".format(num, color))
             if not 'A' <= color <= 'D':
-                raise Exception('invalid card {}{}'.format(num, color))
+                raise Exception('invalid card {}-{}'.format(num, color))
 
             cards.append(Card(int(num), color))
         return cards
@@ -38,8 +40,10 @@ class Card:
 
 # 一期：
 #     简单统计每种牌的概率即可
-#        1. 判断牌
-#        2. 单测
+#       1. 判断牌
+#       2. 单测
+#       3. 随机发剩下的牌
+#       4. 去掉两张，判断剩下的5张牌 TODO
 # 二期：
 #     算出一个综合分
 def judge_cards(cards):
@@ -55,7 +59,7 @@ def judge_cards(cards):
                 ]
     for is_func in funcions:
         if is_func(cards):
-            return func.func_name
+            return is_func.func_name
     return None
 
 
@@ -120,9 +124,42 @@ def group_cards(cards):
     return card_num_map
 
 
+rand = random.Random()
+
+
+def generate_card(card_str_set):
+    global rand
+
+    while True:
+        card_seq = rand.randint(0, 51)
+        card = card_map.car_map[card_seq]
+        if str(card) not in card_str_set:
+            return card
+
+
+def try_rand_cards(cards):
+    cards = cards[:]
+    card_str_set = set(map(str, cards))
+
+    card = generate_card(card_str_set)
+    cards.append(card)
+    card_str_set.add(str(card))
+
+
+
+
 if __name__ == '__main__':
-    cards = Card.create('14A 12AA')
 
-    func = group_cards
+    # 获取已有牌
+    inp = " ".join(sys.argv[1:])
+    cards = Card.create(inp)
 
-    print func
+    if len(cards) >= 7:
+        raise Exception("card is full")
+
+    # 模拟不发剩余牌
+    func_num_map = {}
+    for j in range(10000):
+        func = try_rand_cards(cards)
+        num = func_num_map.get(func, 0)
+        func_num_map[func] = num + 1
